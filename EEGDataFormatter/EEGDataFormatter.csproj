@@ -11,8 +11,12 @@
 
   <ItemGroup>
     <Reference Include="csmatio">
-      <HintPath>..\..\WpfDataInput\packages\DotNETv40\csmatio.dll</HintPath>
+      <HintPath>..\packages\DotNETv40\csmatio.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
   </ItemGroup>
 
 </Project>

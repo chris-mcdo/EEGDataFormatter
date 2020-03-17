@@ -38,8 +38,7 @@ namespace EEGDataFormatter
 
         public bool ValidateJSensor(JProperty jSensor)
         {
-            // Manually perform string validation; throwing exceptions takes ages
-            return !jSensor.Name.Equals("Z");
+            return !(jSensor.Name.Equals("Z") || jSensor.Name.Equals("Unknown"));
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

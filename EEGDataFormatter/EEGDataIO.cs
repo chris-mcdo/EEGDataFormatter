@@ -15,21 +15,20 @@ namespace EEGDataFormatter
     class EEGDataIO
     {
         
-        public const String RelPath = @"eeg\"; // Path relative to root folder
         public long RefTime { get; set; } // "Time zero" in milliseconds
-        public String DataPath { get; set; } // File path of data directory
+        public String DataDir { get; set; } // File directory of data directory
         public String[] FileNames { get; set; } // List of filenames in time order
 
         List<InputDataModel> EEGDataList { get; set; } // List of input data
 
         // Reads and writes data from specific directory, over certain specified time
-        public EEGDataIO(String rootPath, long expStartTime)
+        public EEGDataIO(String dataDir, long expStartTime)
         {
-            // Setting path
-            DataPath = rootPath + RelPath;
+            // Setting directory
+            DataDir = dataDir;
 
             // List of filenames in time order
-            FileNames = Directory.GetFiles(DataPath, "*")
+            FileNames = Directory.GetFiles(DataDir, "*")
                          .Select(Path.GetFileName)
                          .OrderBy(f => f)
                          .ToArray();
@@ -116,7 +115,7 @@ namespace EEGDataFormatter
             List<MLArray> mlList = new List<MLArray>();
             mlList.Add(mlAmplitudes);
             mlList.Add(mlTimes);
-            MatFileWriter mfw = new MatFileWriter(writePath+".mat", mlList, false);
+            MatFileWriter mfw = new MatFileWriter(writePath, mlList, false);
         }
 
         public List<InputDataModel> DataListFromFile(String fileName)
@@ -127,7 +126,7 @@ namespace EEGDataFormatter
             long fEndTime = long.Parse(digits[1]);
 
             // Loading JSON string from file
-            String escapedJsonString = File.ReadAllText(DataPath + fileName);
+            String escapedJsonString = File.ReadAllText(DataDir + fileName);
             // First deserialise: removing escape characters. Each string is from single time
             List<String> unescapedJsonString = JsonConvert.DeserializeObject<List<String>>(escapedJsonString);
             
