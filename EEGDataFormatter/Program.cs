@@ -12,10 +12,7 @@ namespace EEGDataFormatter
         [STAThread]
         static void Main(string[] args)
         {
-            // TODO: 
-            // 1) retest this with new folder organisation
-            // 2) delete inputdatafile.cs
-
+            
             int opt = 0;
 
             while (opt != 3)
@@ -36,25 +33,16 @@ namespace EEGDataFormatter
                     Console.WriteLine("Exiting...");
                 }
             }
+            
         }
 
         public static void WriteFullExp()
         {
-            String dataDir;
-            String writeDir;
+            // Get directories to read and write from
+            String[] dirReadWrite = GetReadWriteDirectories();
 
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            do
-            {
-                Console.WriteLine("Navigate to the data folder (press enter to show dialog)...");
-                Console.ReadLine();
-            } while (!fbd.ShowDialog().Equals(DialogResult.OK));
-
-            dataDir = fbd.SelectedPath + @"\";
-            writeDir = Path.GetFullPath(Path.Combine(dataDir, @"..\MAT data\Full experiment\"));
-
-            // Creating folder to write
-            System.IO.Directory.CreateDirectory(writeDir);
+            String dataDir = dirReadWrite[0];
+            String writeDir = dirReadWrite[1];
 
             // start and end times of experiment
             long[] startEnd = GetExpStartEnd(dataDir);
@@ -69,26 +57,13 @@ namespace EEGDataFormatter
             dataIO.WriteToMat(writeDir + "full.mat");
         }
 
-        // Writing snippets
         public static void WriteSnippets()
         {
+            // Get directories to read and write from
+            String[] dirReadWrite = GetReadWriteDirectories();
 
-            String dataDir;
-            String writeDir; 
-
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            do
-            {
-                Console.WriteLine("Navigate to the data folder (press enter to show dialog)...");
-                Console.ReadLine();
-            } while (!fbd.ShowDialog().Equals(DialogResult.OK));
-
-            dataDir = fbd.SelectedPath + @"\";
-            writeDir = Path.GetFullPath(Path.Combine(dataDir, @"..\MAT data\Snippets\"));
-
-
-            // Creating folder to write
-            System.IO.Directory.CreateDirectory(writeDir);
+            String dataDir = dirReadWrite[0];
+            String writeDir = dirReadWrite[1]; 
 
             // Loading CV file
             CVFile cvf = LoadCVFile(dataDir);
@@ -107,12 +82,10 @@ namespace EEGDataFormatter
                     // start and end times
                     long start = snippetList[j].TimeStamp; long end = snippetList[j].CompletedTimeStamp;
 
-                    // new IO object
                     EEGDataIO dataIO = new EEGDataIO(dataDir, GetExpStartEnd(dataDir)[0]);
 
                     dataIO.LoadData(start, end);
 
-                    // Writing all data to .mat
                     dataIO.WriteToMat(writeDir + "CV_" + (i + 1) + "_snippet_" + (j + 1) + ".mat");
                 }
             }
@@ -137,5 +110,34 @@ namespace EEGDataFormatter
             return JsonConvert.DeserializeObject<CVFile>(jsonString);
         }
 
+        public static String[] GetReadWriteDirectories()
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+
+            // Data directory
+            do
+            {
+                Console.WriteLine("Navigate to the folder containing the EEG data (press enter to show dialog)...");
+                Console.ReadLine();
+            } while (!fbd.ShowDialog().Equals(DialogResult.OK));
+            String dataDir = fbd.SelectedPath + @"\";
+
+            // Get experiment number from data directory
+            int expNo = int.Parse(new DirectoryInfo(dataDir + @"..\").Name);
+
+            do
+            {
+                Console.WriteLine("Navigate to the folder to write the data to, " +
+                    "i.e. containing MATLAB resampling/pre-processing scripts " +
+                    "(press enter to show dialog)...");
+                Console.ReadLine();
+            } while (!fbd.ShowDialog().Equals(DialogResult.OK));
+            String writeDir = fbd.SelectedPath + @"\"+expNo+@"_unproc\";
+
+            // Creating folder to write
+            System.IO.Directory.CreateDirectory(writeDir);
+
+            return new string[]{ dataDir, writeDir };
+        }
     }
 }
