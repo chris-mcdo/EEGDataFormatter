@@ -39,23 +39,21 @@ namespace EEGDataFormatter
 
         public void LoadData(long startTime, long endTime)
         {
-            // TODO: make this load only data between given startTime, endTime
-
             // File start and end times
             long fStartTime = startTime + RefTime; long fEndTime = endTime + RefTime;
 
             // Corresponding index range
             int startIndex = 0; int endIndex = 1;
-            bool InRange = false;
+            bool inRange = false;
             for (int i = 0; i < FileNames.Length; i++)
             {
                 String[] digits = Regex.Split(FileNames[i], @"\D+"); 
-                if (!InRange && long.Parse(digits[0]) >= fStartTime)
+                if (!inRange && long.Parse(digits[0]) >= fStartTime)
                 {
                     startIndex = Math.Max(0, i-1) ; // start on file containing start time
-                    InRange = true;
+                    inRange = true;
                 }
-                if (InRange && long.Parse(digits[1]) >= fEndTime)
+                if (inRange && long.Parse(digits[1]) >= fEndTime)
                 {
                     endIndex = i; // end on file containing end time
                     break;
@@ -65,7 +63,7 @@ namespace EEGDataFormatter
 
             int nFiles = endIndex - startIndex + 1;
 
-            Console.WriteLine("Reading " + nFiles.ToString() + " files");
+            Console.WriteLine("Reading " + nFiles.ToString() + " files...");
 
             // Getting list of files
             List<InputDataModel> fileDataList = new List<InputDataModel>();
@@ -91,10 +89,16 @@ namespace EEGDataFormatter
                 return;
             }
 
+            // "zeroed" time; in seconds
+            double[][] times = new double[1][];
+            times[0] = EEGDataList.Select(x=>(double.Parse(x.SystemMillisecond)-RefTime)/1000).ToArray();
+
+            // Channel names
+            // String[][] channels = new String[1][];
+            // channels[0] = EEGDataList[0].Sensors.Select(x => x.Name).ToArray();
+
             // Generating list of data to be written
             double[][] matData = new double[EEGDataList[0].Sensors.Count()][];
-            double[][] times = new double[1][];
-            times[0] = EEGDataList.Select(x=>double.Parse(x.SystemMillisecond)).ToArray();
 
             // for each sensor
             for (int i = 0; i < EEGDataList[0].Sensors.Count(); i++)
@@ -112,10 +116,12 @@ namespace EEGDataFormatter
 
             MLDouble mlAmplitudes = new MLDouble("amplitudes", matData);
             MLDouble mlTimes = new MLDouble("times", times);
+            // MLChar mlChannels = new MLChar("channels", channels);
             List<MLArray> mlList = new List<MLArray>();
             mlList.Add(mlAmplitudes);
             mlList.Add(mlTimes);
             MatFileWriter mfw = new MatFileWriter(writePath, mlList, false);
+            Console.WriteLine("Written to file.");
         }
 
         public List<InputDataModel> DataListFromFile(String fileName)
